@@ -1,69 +1,86 @@
 
 import express from "express";
+import Product from '../models/product.js';
 
 const myrouter = express.Router();
 
 // Initial product data
 const products = [
-
+    {
+        id: 1,
+        name: "Royal Oud",
+        category: "Men",
+        price: 4500,
+        stock: 10
+    }
 ];
 
 let nextProductId = 4;
 
 
-myrouter.get("/products", (req, res) => {
-    const totalProducts = products.length;
+myrouter.get("/products", async (req, res) => {
+    try {
+        const totalProducts = await Product.countDocuments();
 
-    const currentPage = Number(req.query.page ?? 1);
-    const limit = Number(req.query.limit ?? 10);
+        const currentPage = Number(req.query.page ?? 1);
+        const limit = Number(req.query.limit ?? 10);
 
-    if (!Number.isInteger(currentPage) || currentPage < 1) {
-        return res.status(400).send({
-            status: 400,
-            message: "Page must be a positive integer."
-        });
-    }
-
-    if (!Number.isInteger(limit) || limit < 1) {
-        return res.status(400).send({
-            status: 400,
-            message: "Give a valid limit."
-        });
-    }
-
-    if (limit > 50) {
-        return res.status(400).send({
-            status: 400,
-            message: "The product limit is 50."
-        });
-    }
-
-    const totalPages = Math.ceil(totalProducts / limit);
-
-    if (totalProducts > 0 && currentPage > totalPages) {
-        return res.status(400).send({
-            status: 400,
-            message: `You have only ${totalPages} pages.`
-        });
-    }
-
-    const skip = (currentPage - 1) * limit;
-    const paginatedProducts = products.slice(skip, skip + limit);
-
-
-    return res.status(200).send({
-        status: 200,
-        message: "Products fetched successfully!",
-        data: paginatedProducts,
-        pagination: {
-            totalProducts,
-            currentPage,
-            limit,
-            totalPages
+        if (!Number.isInteger(currentPage) || currentPage < 1) {
+            return res.status(400).send({
+                status: 400,
+                message: "Page must be a positive integer."
+            });
         }
-    });
-});
 
+        if (!Number.isInteger(limit) || limit < 1) {
+            return res.status(400).send({
+                status: 400,
+                message: "Give a valid limit."
+            });
+        }
+
+        if (limit > 50) {
+            return res.status(400).send({
+                status: 400,
+                message: "The product limit is 50."
+            });
+        }
+
+        const totalPages = Math.ceil(totalProducts / limit);
+
+        if (totalProducts > 0 && currentPage > totalPages) {
+            return res.status(400).send({
+                status: 400,
+                message: `You have only ${totalPages} pages.`
+            });
+        }
+
+        const skip = (currentPage - 1) * limit;
+
+        const paginatedProducts = await Product.find()
+            .skip(skip)
+            .limit(limit);
+
+        return res.status(200).send({
+            status: 200,
+            message: "Products fetched successfully!",
+            data: paginatedProducts,
+            pagination: {
+                totalProducts,
+                currentPage,
+                limit,
+                totalPages
+            }
+        });
+    } catch (error) {
+        console.error("Error fetching products:", error);
+
+        return res.status(500).send({
+            status: 500,
+            message: "Server error while fetching products."
+        });
+    }
+});
 
 
 
