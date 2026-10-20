@@ -1,4 +1,8 @@
-import Product from './models/product.js';
+import Product from './models/Product.js';
+import dbConnect from './config/db.js';
+
+await dbConnect();
+
 
 const product = new Product({
     name: "Royal Oud",

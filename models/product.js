@@ -10,7 +10,7 @@ const ProductSchema = new mongoose.Schema({
     category: {
         type: String,
         required: true,
-        enum: ["Menubar", "Women", "Unisex"]
+        enum: ["Men", "Women", "Unisex"]
     },
 
     price: {
@@ -25,7 +25,7 @@ const ProductSchema = new mongoose.Schema({
         min: 0
     },
 
-    Image: {
+    image: {
         type: String,
         required: true,
         default: "default-perfume.jpg"
@@ -40,6 +40,6 @@ const ProductSchema = new mongoose.Schema({
     { timestamps: true }
 )
 
-const Product = mongoose.model("product", ProductSchema);
+const Product = mongoose.model("Product", ProductSchema);
 
 export default Product;
