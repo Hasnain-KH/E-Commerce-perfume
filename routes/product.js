@@ -1,6 +1,7 @@
 
 import express from "express";
 import Product from '../models/Product.js';
+import mongoose from "mongoose";
 
 const myrouter = express.Router();
 
@@ -110,6 +111,8 @@ myrouter.get("/products/filter", (req, res) => {
 });
 
 
+
+//Search //
 myrouter.get('/products/search', (req, res) => {
     const Searchname = req.query.name;
 
@@ -137,32 +140,73 @@ myrouter.get('/products/search', (req, res) => {
 
 })
 
-// 3. GET one product by ID
-myrouter.get("/products/:id", (req, res) => {
-    const productID = Number(req.params.id);
 
-    if (!Number.isInteger(productID) || productID <= 0) {
-        return res.status(400).send({
-            status: 400,
-            message: "Product ID must be a positive integer!"
+myrouter.get("/products/:id", async (req, res) => {
+    const productID = req.params.id;
+
+    try {
+        if (!mongoose.Types.ObjectId.isValid(productID)) {
+            return res.status(400).send({
+                status: 400,
+                message: "Invalid Product ID!"
+            });
+        }
+
+        const product = await Product.findById(productID);
+
+        if (!product) {
+            return res.status(404).send({
+                status: 404,
+                message: "Product not found!"
+            });
+        }
+
+        return res.status(200).send({
+            status: 200,
+            message: "Product fetched successfully!",
+            data: product
+        });
+
+    } catch (error) {
+        console.error("Error fetching product:", error);
+
+        return res.status(500).send({
+            status: 500,
+            message: "Server error while fetching product."
         });
     }
-
-    const product = products.find((item) => item.id === productID);
-
-    if (!product) {
-        return res.status(404).send({
-            status: 404,
-            message: "Product not found!"
-        });
-    }
-
-    return res.status(200).send({
-        status: 200,
-        message: "Product fetched successfully!",
-        data: product
-    });
 });
+
+
+
+
+
+// 3. GET one product by ID
+// myrouter.get("/products/:id", async (req, res) => {
+//     // const productID = Number(req.params.id);
+
+//     if (!product) {
+//         return res.status(404).send({
+//             status: 404,
+//             message: "Product not found!"
+//         });
+//     }
+
+//     return res.status(200).send({
+//         status: 200,
+//         message: "Product fetched successfully!",
+//         data: product
+//     });
+// });
+
+// if (!Number.isInteger(productID) || productID <= 0) {
+//     return res.status(400).send({
+//         status: 400,
+//         message: "Product ID must be a positive integer!"
+//     });
+// }
+
+// const product = products.find((item) => item.id === productID);
 
 
 // 4. POST a new product
