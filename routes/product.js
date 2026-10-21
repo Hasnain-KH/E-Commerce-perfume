@@ -88,34 +88,81 @@ myrouter.get("/products", async (req, res) => {
 
 // 2. GET products by category
 // IMPORTANT: Keep this before GET /products/:id
-myrouter.get("/products/filter", (req, res) => {
-    const category = req.query.category;
+// myrouter.get("/products/filter", (req, res) => {
+//     const category = req.query.category;
 
-    if (typeof category !== "string" || !category.trim()) {
-        return res.status(400).send({
-            status: 400,
-            message: "Please provide a product category!"
+//     if (typeof category !== "string" || !category.trim()) {
+//         return res.status(400).send({
+//             status: 400,
+//             message: "Please provide a product category!"
+//         });
+//     }
+
+//     const filteredProducts = products.filter(
+//         (product) =>
+//             product.category.toLowerCase() === category.trim().toLowerCase()
+//     );
+
+//     return res.status(200).send({
+//         status: 200,
+//         message: "Products filtered successfully!",
+//         data: filteredProducts
+//     });
+// });
+
+
+myrouter.get("/products/filter", async (req, res) => {
+    try {
+        const category = req.query.category;
+
+        if (typeof category !== "string" || !category.trim()) {
+            return res.status(400).send({
+                status: 400,
+                message: "Please provide a product category!"
+            });
+        }
+
+        const filteredProducts = await Product.find({
+            category: {
+                $regex: `^${category.trim()}$`,
+                $options: "i"
+            }
+        });
+
+        return res.status(200).send({
+            status: 200,
+            message: "Products filtered successfully!",
+            data: filteredProducts
+        });
+
+    } catch (error) {
+        console.error("Error filtering products:", error);
+
+        return res.status(500).send({
+            status: 500,
+            message: "Server error while filtering products."
         });
     }
-
-    const filteredProducts = products.filter(
-        (product) =>
-            product.category.toLowerCase() === category.trim().toLowerCase()
-    );
-
-    return res.status(200).send({
-        status: 200,
-        message: "Products filtered successfully!",
-        data: filteredProducts
-    });
 });
 
 
 
+
+
+
+
+
+
 //Search //
-myrouter.get('/products/search', (req, res) => {
+myrouter.get('/products/search', async (req, res) => {
     const Searchname = req.query.name;
 
+    // if (Searchname === undefined) {
+    //     return res.status(400).send({
+    //         status: 400,
+    //         message: "Product Not Found"
+    //     })
+    // }
 
     if (typeof Searchname !== "string" || !Searchname.trim()) {
         return res.status(400).send({
@@ -123,21 +170,35 @@ myrouter.get('/products/search', (req, res) => {
             message: "Pleae Provide a Valid Product Search Name!"
         })
     }
-    if (Searchname === undefined) {
-        return res.status(400).send({
-            status: 400,
-            message: "Product Not Found"
+
+    // let filteredProduct = products.filter((product) => product.name.toLowerCase().includes(Searchname.trim().toLowerCase()));
+
+    try {
+        const filteredProducts = await Product.find({ name: { $regex: Searchname.trim(), $options: "i" } });
+
+        if (filteredProducts.length === 0) {
+            return res.status(200).send({
+                status: 200,
+                message: "No Matching Products found!",
+                data: filteredProducts
+            })
+        }
+
+        res.status(200).send({
+            status: 200,
+            message: "Product Filtered",
+            data: filteredProducts
         })
+
+    } catch (err) {
+        console.log(err);
+
+        return res.status(500).send({
+            status: 500,
+            message: "Internal Server Error"
+        });
+
     }
-
-    let filteredProduct = products.filter((product) => product.name.toLowerCase().includes(Searchname.trim().toLowerCase()));
-
-    res.status(200).send({
-        status: 200,
-        message: "Product Filtered",
-        data: filteredProduct
-    })
-
 })
 
 
