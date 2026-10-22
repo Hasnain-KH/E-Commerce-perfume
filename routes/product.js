@@ -349,101 +349,151 @@ myrouter.post("/products", (req, res) => {
 
 
 // 5. PUT: replace all editable fields of a product
-myrouter.put("/products/:id", (req, res) => {
-    const productID = Number(req.params.id);
+// myrouter.put("/products/:id", (req, res) => {
+//     const productID = Number(req.params.id);
 
-    if (!Number.isInteger(productID) || productID <= 0) {
+//     if (!Number.isInteger(productID) || productID <= 0) {
+//         return res.status(400).send({
+//             status: 400,
+//             message: "Product ID must be a positive integer!"
+//         });
+//     }
+
+//     const productPosition = products.findIndex(
+//         (product) => product.id === productID
+//     );
+
+//     if (productPosition === -1) {
+//         return res.status(404).send({
+//             status: 404,
+//             message: "Product not found!"
+//         });
+//     }
+
+//     const { name, price, category, image, stock, description } = req.body;
+
+//     if (
+//         name === undefined ||
+//         price === undefined ||
+//         category === undefined ||
+//         image === undefined ||
+//         stock === undefined ||
+//         description === undefined
+//     ) {
+//         return res.status(400).send({
+//             status: 400,
+//             message: "All product fields are required for PUT!"
+//         });
+//     }
+
+//     if (
+//         typeof name !== "string" ||
+//         typeof category !== "string" ||
+//         typeof image !== "string" ||
+//         typeof description !== "string" ||
+//         typeof price !== "number" ||
+//         typeof stock !== "number"
+//     ) {
+//         return res.status(400).send({
+//             status: 400,
+//             message: "Invalid product data types!"
+//         });
+//     }
+
+//     if (
+//         !name.trim() ||
+//         !category.trim() ||
+//         !image.trim() ||
+//         !description.trim()
+//     ) {
+//         return res.status(400).send({
+//             status: 400,
+//             message: "Text fields cannot be empty!"
+//         });
+//     }
+
+//     if (!Number.isFinite(price) || price <= 0) {
+//         return res.status(400).send({
+//             status: 400,
+//             message: "Price must be greater than 0!"
+//         });
+//     }
+
+//     if (!Number.isInteger(stock) || stock < 0) {
+//         return res.status(400).send({
+//             status: 400,
+//             message: "Stock must be a non-negative integer!"
+//         });
+//     }
+
+//     const updatedProduct = {
+//         id: productID,
+//         name,
+//         price,
+//         category,
+//         image,
+//         stock,
+//         description
+//     };
+
+//     products[productPosition] = updatedProduct;
+
+//     return res.status(200).send({
+//         status: 200,
+//         message: "Product updated successfully!",
+//         data: updatedProduct
+//     });
+// });
+
+
+//Put HTTP Method for Database  //
+
+myrouter.put('/products/:id', async (req, res) => {
+
+    if (!mongoose.Types.ObjectId.isValid(req.params.id)) {
         return res.status(400).send({
             status: 400,
-            message: "Product ID must be a positive integer!"
+            message: "Invalid Product ID"
         });
     }
 
-    const productPosition = products.findIndex(
-        (product) => product.id === productID
-    );
+    try {
+        const updatedProduct = await Product.findByIdAndUpdate(
+            req.params.id,
+            req.body,
+            { new: true, runValidators: true }
+        )
 
-    if (productPosition === -1) {
-        return res.status(404).send({
-            status: 404,
-            message: "Product not found!"
+        if (!updatedProduct) {
+            return res.status(404).send({
+                status: 404,
+                message: "Product Not Found"
+            })
+        }
+
+        res.status(200).send({
+            status: 200,
+            message: "Product Updated Successfully!",
+            updatedproduct: updatedProduct
+        })
+
+    } catch (err) {
+        console.log(err);
+
+        return res.status(500).send({
+            status: 500,
+            message: "Internal Server Error"
         });
+
     }
+})
 
-    const { name, price, category, image, stock, description } = req.body;
 
-    if (
-        name === undefined ||
-        price === undefined ||
-        category === undefined ||
-        image === undefined ||
-        stock === undefined ||
-        description === undefined
-    ) {
-        return res.status(400).send({
-            status: 400,
-            message: "All product fields are required for PUT!"
-        });
-    }
 
-    if (
-        typeof name !== "string" ||
-        typeof category !== "string" ||
-        typeof image !== "string" ||
-        typeof description !== "string" ||
-        typeof price !== "number" ||
-        typeof stock !== "number"
-    ) {
-        return res.status(400).send({
-            status: 400,
-            message: "Invalid product data types!"
-        });
-    }
 
-    if (
-        !name.trim() ||
-        !category.trim() ||
-        !image.trim() ||
-        !description.trim()
-    ) {
-        return res.status(400).send({
-            status: 400,
-            message: "Text fields cannot be empty!"
-        });
-    }
 
-    if (!Number.isFinite(price) || price <= 0) {
-        return res.status(400).send({
-            status: 400,
-            message: "Price must be greater than 0!"
-        });
-    }
 
-    if (!Number.isInteger(stock) || stock < 0) {
-        return res.status(400).send({
-            status: 400,
-            message: "Stock must be a non-negative integer!"
-        });
-    }
 
-    const updatedProduct = {
-        id: productID,
-        name,
-        price,
-        category,
-        image,
-        stock,
-        description
-    };
-
-    products[productPosition] = updatedProduct;
-
-    return res.status(200).send({
-        status: 200,
-        message: "Product updated successfully!",
-        data: updatedProduct
-    });
-});
 
 
 // 6. PATCH: update only the supplied fields
